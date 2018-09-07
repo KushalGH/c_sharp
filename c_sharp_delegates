@@ -1,0 +1,347 @@
+C# Delegates
+
+Introduction
+
+There are 
+1. Delegates
+2. Events or Event Raiser
+3. Event Handlers or Event Listener
+4. Event Args or Event data 
+
+Event Raiser or Events: One who raises the event.. Event Raiser can be thought of as a Notification. ie event tells something is going to happen and it will notify.
+
+Simple example of events is click on Button.. When we click on button, we raises a event.. We can have  multiple objects listening to the same event.. Means there could be multiple things in your project which wants to know about the change..
+
+Example: In case of Marks obtained by student.. We can have student marks event, when this marks are obtained, then we can have multiple subscribers for this event.. Subscriber like, IsPassed? Notification to parent, Class Ranking..
+
+Objects that raise the events don't have to know about the subscribers that is gonna receive the data. 
+
+
+Delegate: The Delegate is one which acts as the connection with Event raiser and event Handler.. A Delegate is function pointer.
+
+MulticastDelegate class - A class that tracts all the events which are listening
+
+Event Handler or Subscribers: Person or Object who receives the event.. Event handlers are call back functions which are responsible for receiving and processing data from delegate.
+
+Event handlers normally have two parameters,
+1. Sender
+2. Event Args
+
+Event Args: The data that event raiser sends to event handler.. Event Args are actual data..
+
+
+Creating a Delegate
+
+Whenever there is an event, there is an delegate.. But Delegates can stand on there own..
+We use Delegate keyword to define the custom Delegate..
+
+public delegate void attendance(int days, string branch);
+
+Naming Convention : We usually use the word Handler with the delegate name.. like, in our example, the delegate same should be attendenceHandler..
+
+This delegate don't return any thing..i.e. the event raises a request to the event handler.. The event raiser don't expect a response from the event handler, the data goes only in one direction..
+
+Delegates can be thought of as transmission of data from one point to other.. i.e. from Event raiser to Event Handler.. In this case, the delegate will pass on days and branch to the handler..
+
+When we create a delegate, Compiler creates a class at backend..
+
+Creating the Handler Method
+
+Now, we have the delegate, that have two parameters. Now, we want the handler method to handle those data.. So, the thumb Rule:
+
+"Event Handler Method should also have same number of parameters with same data types in same sequence as the delegate have".
+
+public  void Student_attendance(int _days, string _branch)  {
+                     Console.WriteLine("I am Handler Method");
+}
+
+Just to make focus.. I am repeating it again the data type and it's sequence should also be same.. i.e., if my delegate have first int and second string data type, my handler method should also have first int and other string data type..
+
+
+
+MulticastDelegate Class - How Delegates works back end
+
+
+Delegate is the base abstract class.. 
+
+Inheritance Hierarchy
+System.Object  -- > System.Delegate -->   System.MulticastDelegate
+
+Delegate class have two properties:
+
+1. Method: Get the method represented by the delegate.. This method we define [ In our case :  Student_attendance], this is the method where the delegate pass the data.. These are basically method handlers..
+
+2. Target: Gets the class instance on which the current delegate invokes the instance methods.. Target is the actual object that has that method..
+
+Every Delegate that we create, once compiled, will inherit from MulticastDelegate class.. MulticastDelegate is really a way to hold multiple delegates.. i.e., when your Event raiser raises a request, this multicast delegate class have multiple delegates to pass the data to multi handlers..
+
+We cannot Inherit directly from MulticastDelegate class.. So we use the delegate keyword.. These are very specific classes, that compiler blocks from being derived from unless you use delegate keyword..
+
+There is an important method called : GetInvocationList() in MulticastDelegate class. This list can be thought of as list that holds the delegates sequentially.. ie, the order the delegates are in the list, is the order they will be invoked..
+
+We can think of MulticastDelegate class as an array of multiple delegates.. Delegate invocation process is the synchronous process..
+
+Creating the Delegate Instance
+
+Now we have Delegate and handler..
+
+Let's look at them..
+
+Delegate:
+public delegate void attendance(int days, string branch);
+
+Handler:
+public  void Student_attendance(int _days, string _branch)  {
+                     Console.WriteLine("I am Handler Method");
+}
+
+Now how we can tell the handler that, hey you have to listen this delegate.. To do that, we instantiate the Delegate..
+
+
+attendance obj1 = new attendance(Student_attendance);
+
+So, when this delegate [ attendance ] is invoked, the handler [ Student_attendance ] will be called..
+
+How, do we actually invoke the delegate?
+
+Invoking the Delegate
+
+We invoke the delegate, as we call a method..
+
+obj1(5, "Computer Science");  -- So, the Delegate will be invoked.. and this delegate will call the handler method [ Student_attendance ], and pass 5 and "Computer Science" at run time.. 
+
+Here we have only one delegate and one handler..
+
+Now suppose we create one more handler Method for this delegate..
+
+Our example gets modified to:
+
+Delegate:
+public delegate void attendance(int days, string branch);
+
+Handler:
+public  void Student_attendance(int _days, string _branch)  {
+                     Console.WriteLine("I am Handler Method");
+}
+
+
+public  void Teacher_attendance(int _days, string _branch)  {
+                     Console.WriteLine("I am Handler Method 2 for Teacher Attendance");
+}
+
+InvocationList:
+
+// Instantiated Delegate 1
+attendance obj1 = new attendance(Student_attendance);
+
+// Instantiated Delegate 2
+attendance obj2 = new attendance(Teacher_attendance);
+
+// Invoking Delegate 1
+obj1(5, "Computer Science");
+
+// Invoking Delegate 2
+obj2(10, "maths");
+
+
+Now, suppose we want obj1 to call both handlers [ Student_attendance and Teacher_attendance ].. So, that it will be two calls but it looks like one.. Then in this case, we can do this like:
+
+obj1 += obj2; // We are  adding delegate obj2 into obj1 innvocation list..
+
+
+Now, when we invoke the obj1(5, "Computer Science"); it will pass 5, "Computer Science" to both the handlers [ Student_attendance and Teacher_attendance ].. This provides a very nice way to group up different notifications, and then with one call we can notify two handler methods..
+
+If the delegate have return type.. and we have 3 - 4 different delegates added in invocation list, the last delegate call will be the one, whose value will be returned.. But if we call the delegates individually then each return type value will be displayed..
+
+
+Defining the Event
+
+
+We will see how the event can be associated with the delegate.. When an event is raised, how we will route to the delegate..
+
+Event:
+
+public event attendance objEvent1;
+
+public  : [access modifier] 
+event   : [Keyword] 
+attendance   : [Delegate name]
+objEvent1;  [Event Name]
+
+A event cannot do any thing on it's own.. So, it needs a delegate.. We define the event using "event" keyword.. 
+
+
+public event Eventhandler eventObj2;
+
+Eventhandler class is the .net build in delegate, that don't return anything..
+
+Definition from .net Assembly :  public delegate void EventHandler(object sender, EventArgs e);
+
+Raising Events
+
+Once, the events are defined, we have to raise the event.. Raising the event is same as raising the delegate.. like a method.. 
+
+
+objEvent1(10,"Hindi"); -- It is advisable to check the null check before calling a event, because If the delegate invocation list is null, then it may through an error..
+
+Another way to raise the event is :
+
+We can cast the event as delegate and invoke the delegate..
+
+attendence objDelegate = objEvent1 as attendence;
+objDelegate(10,"Hindi");
+
+Creating an EventArgs Class
+
+The reason we use EventArgs because, If we have lot of parameters, then the code looks bit messy.. 
+We can see in .net, like button click, 
+
+public void button_Click(object sender, EventArgs e) { 
+
+} 
+
+Suppose I have lot of data raised, then all that data is encapsulated in EventArgs [ Can be used as example of Encapsulation ].. We can create a custom EventArgs and extend the EventArgs class..
+
+public event Eventhandler eventObj2;
+
+eventObj2(this, EventArgs.Empty);
+
+or passing custom EventArgs in event::
+
+eventObj2(this, new CustomEventArgs(4, "Hindi"));
+
+
+CustomEventArg::
+
+    public class CustomEventArgs : EventArgs
+    {
+        public CustomEventArgs(int days, string branch)
+        {
+            _days = days;
+            _branch = branch;
+        }
+
+        public int _days{ get; set; }
+        public string _branch{ get; set; }
+    }
+
+Delegate, Events and Eventhandler for Custom Event Args::
+
+-- DELEGATE
+public delegate void attendance(object sender, CustomEventArgs e); 
+
+-- EVENT HANDLER
+public void student_attendence(object sender, CustomEventArgs e) {
+                  Console.WriteLine("Custom Args"  +  e._days.ToString()); }
+
+-- Connecting Event Handler and Delegate
+
+attendance obj1 = new attendance(student_attendence);
+
+
+-- EVENT 
+public event attendance eventObj1;
+
+-- INVOKING EVENT eventObj1(this,new CustomEventArgs(4, "Hindi"))
+
+Eventhandler <T>
+
+.Net provides generic Eventhandler<T> which helps in reducing our work and that can be used instead of custom delegates..
+
+CUSTOM DELEGATE - 
+public delegate void attendance(object sender, CustomEventArgs e); 
+
+Eventhandler<T> can be used instead of crating custom delegates.. Then no need to create the above custom event. We can create the EventHandler<T> like this:
+
+public event EventHandler<CustomEventArgs> eventObj3;
+
+
+If we have eventArgs with delegates then, EventHandler<T> is helpful.. But If we don't have then creating custom delegates is a option...
+
+Now how we can attach the event with the handler, if we have EventHandler<T>
+
+eventObj3 = new EventHandler<CustomEventArgs>(student_attendence);
+
+-- EVENT HANDLER
+public void student_attendence(object sender, CustomEventArgs e) {
+                  Console.WriteLine("Custom Args"  +  e._days.ToString());
+
+}
+
+Delegate Inference
+
+We can directly associate the delegate with the event.. So, when we complile the C# compiler should figure out what the delegate is just by looking at the event signature and then generate an automatic delegate for us..
+
+public event EventHandler<CustomEventArgs> eventObj3;
+
+eventObj3 = student_attendence(object sender, CustomEventArgs e);
+
+-- EVENT HANDLER
+public void student_attendence(object sender, CustomEventArgs e) {
+                  Console.WriteLine("Custom Args"  +  e._days.ToString());
+
+}
+
+
+Anonymous Methods:
+
+Attaching event Handler directly to event..
+
+public event EventHandler<CustomEventArgs> eventObj3;
+
+eventObj3 +=  delegate(object sender, CustomEventArgs e) {
+                  Console.WriteLine("Custom Args"  +  e._days.ToString());
+}
+
+
+Lambdas
+
+Lambdas provide the concise way to define handler methods..
+
+eventObj3 +=  delegate(object sender, CustomEventArgs e) {
+                  Console.WriteLine("Custom Args"  +  e._days.ToString());
+}
+
+
+Lambda expression for Event:
+
+eventObj3 += (s,e) => Console.WriteLine("Custom Args"  +  e._days.ToString());
+
+
+Lambda expression for Delegate:
+
+delegate int NewDelegate(int marks, string grades)
+
+NewDelegate objDelegate = (x, y) => x.ToString() + y;
+
+
+string result = objDelegate(9,"A");
+
+
+Using Action<T> and using Func<T,TResult>
+
+.Net has some build-in delegates.. The common in-build delegate is:
+
+1. Action<T>  : Accepts a single parameter and returns no parameters. It is basically a delegate which takes a single parameter and returns no value..
+
+Action<string> objDel;
+
+objDel = result;
+objDel("hi")
+
+public static void result(string a) { 
+                  Console.WriteLine("OutPut");
+}
+
+
+2. Func<T,TResult> : Accepts a single parameter and returns  a value of type TResult..
+
+
+Action<string> objDel;
+
+objDel = result;
+int output = objDel(5);
+
+public static int result(int a) { 
+                  return a * 10;
+}
